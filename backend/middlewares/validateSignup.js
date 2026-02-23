@@ -1,11 +1,6 @@
 import { body, validationResult } from "express-validator";
 
 export const validateSignup = [
-  // username
-  body("username")
-    .trim()
-    .notEmpty().withMessage("Username is required")
-    .isLength({ min: 3 }).withMessage("Username must be at least 3 characters"),
 
   // email
   body("email")
