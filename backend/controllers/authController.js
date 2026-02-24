@@ -28,6 +28,15 @@ exports.signup = async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    const otp = generateOTP();
+
+    user.otp = {
+      code: otp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+    };
+
+await user.save();
+
     res.status(201).json({ message: "User created successfully", token });
 
   } catch (error) {
