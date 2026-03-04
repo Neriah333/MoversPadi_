@@ -1,32 +1,60 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
+  // Unique identifier
+  id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true
+  },
+
+  // User role: customer, mover, company
+  role: {
+    type: String,
+    enum: ['customer', 'mover', 'company'],
+    required: true,
+    default: 'customer'
+  },
+
+  // User details
   name: {
     type: String,
     required: true
   },
-  phone: {
-    type: Number,
+  email: {
+    type: String,
     required: true,
     unique: true
   },
-  email : {
+  phone: {
     type: String,
-    required: true, 
+    required: true,
     unique: true
   },
-  password: { 
+  password: {
     type: String,
     required: true
-  }, 
-    otp: {
-    code: String,
-    expiresAt: Date,
   },
+
+  // User status (active, inactive, suspended, etc.)
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'suspended'],
+    default: 'active'
+  },
+
+  // Optional OTP for verification
+  otp: {
+    code: String,
+    expiresAt: Date
+  },
+
   isVerified: {
     type: Boolean,
-    default: false,
+    default: false
   }
-}, {timestamps: true});
+
+}, { 
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+});
 
 module.exports = mongoose.model('User', UserSchema);
