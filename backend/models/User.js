@@ -42,7 +42,7 @@ const UserSchema = new mongoose.Schema({
     default: 'active'
   },
 
-  // Optional OTP for verification
+  // OTP for verification
   otp: {
     code: String,
     expiresAt: Date
