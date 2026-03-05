@@ -7,29 +7,31 @@ const UserSchema = new mongoose.Schema({
     auto: true
   },
 
-  // User role: customer, mover, company
-  role: {
-    type: String,
-    enum: ['customer', 'mover', 'company'],
-    required: true,
-    default: 'customer'
-  },
-
   // User details
   name: {
     type: String,
     required: true
   },
-  email: {
+  // User role: customer, mover, company
+  role: {
     type: String,
+    enum: ['customer', 'mover', 'admin'],
     required: true,
-    unique: true
+    default: 'customer'
   },
+
   phone: {
     type: String,
     required: true,
     unique: true
   },
+
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  
   password: {
     type: String,
     required: true
