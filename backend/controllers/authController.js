@@ -1,7 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const sendVerificationCode = require('../utils/emails'); // your nodemailer util
+const { sendVerificationCode, sendResetPasswordLink } = require('../utils/emails'); // your nodemailer util
+const crypto = require('crypto')
 
 // --------------------- SIGNUP ---------------------
 exports.signup = async (req, res) => {
@@ -118,6 +119,59 @@ exports.verifyLoginOtp = async (req, res) => {
 
   } catch (error) {
     console.error("Verify login OTP error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Generate secure token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    await sendResetPasswordLink(user.email, resetLink);
+
+    res.json({ message: "Password reset link sent to your email" });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ 
+      resetPasswordToken: token, 
+      resetPasswordExpires: { $gt: Date.now() } // token not expired
+    });
+
+    if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // Clear token
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successfully" });
+  } catch (err) {
+    console.error('Reset password error:', err);
     res.status(500).json({ message: "Server error" });
   }
 };

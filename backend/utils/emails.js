@@ -27,4 +27,16 @@ async function sendVerificationCode(to) {
   return code;
 }
 
-module.exports = sendVerificationCode;
+async function sendResetPasswordLink(to, link) {
+  await transporter.sendMail({
+    from: `"MoversPadi" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: 'Reset your password',
+    html: `<p>Click the link below to reset your password:</p>
+           <a href="${link}">${link}</a>
+           <p>This link will expire in 10 minutes.</p>`,
+  });
+}
+
+module.exports = {sendVerificationCode, sendResetPasswordLink};
+
