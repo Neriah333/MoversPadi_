@@ -1,4 +1,3 @@
-// controllers/authController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -14,7 +13,7 @@ exports.signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate 6-digit OTP
+    // Generate OTP
     const otp = await sendVerificationCode(email);
 
     const newUser = new User({
@@ -30,16 +29,9 @@ exports.signup = async (req, res) => {
 
     await newUser.save();
 
-    const token = jwt.sign(
-      { id: newUser._id, email: newUser.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
     res.status(201).json({
       message: "User created, OTP sent to email",
       userId: newUser._id,
-      token
     });
 
   } catch (error) {
@@ -85,6 +77,37 @@ exports.login = async (req, res) => {
 
     if (!user.isVerified) return res.status(403).json({ message: "Please verify your account first" });
 
+    // Generate OTP for login
+    const otp = await sendVerificationCode(email);
+    user.verifyCode = otp;
+    user.verifyCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    res.json({ message: "OTP sent to email for login" });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// --------------------- VERIFY LOGIN OTP ---------------------
+exports.verifyLoginOtp = async (req, res) => {
+  const { email, code } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.verifyCode || user.verifyCode !== code || user.verifyCodeExpires < Date.now()) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    user.verifyCode = undefined;
+    user.verifyCodeExpires = undefined;
+    await user.save();
+
+    // Generate JWT after successful OTP verification
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
@@ -94,19 +117,13 @@ exports.login = async (req, res) => {
     res.json({ message: "Login successful", token });
 
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Verify login OTP error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 // --------------------- LOGOUT ---------------------
 exports.logout = async (req, res) => {
-  try {
-    // For JWT, just tell the client to delete the token.
-    // If you want, you can implement a blacklist system.
-    res.json({ message: "Logout successful" });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  // With JWT, just remove token client-side
+  res.json({ message: "Logout successful" });
 };
