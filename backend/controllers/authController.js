@@ -149,7 +149,8 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body;
+  const { token } = req.params;
+  const { password } = req.body;
 
   try {
     const user = await User.findOne({ 
@@ -160,7 +161,7 @@ exports.resetPassword = async (req, res) => {
     if (!user) return res.status(400).json({ message: "Invalid or expired token" });
 
     // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
 
     // Clear token
