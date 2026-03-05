@@ -1,8 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const generateOTP = require('../utils/generateOTP');
-const sendSMS = require('../utils/sendSMS');
+const sendVerificationEmail = require('../utils/email');
 
 // --------------------- SIGNUP --------------------
 
@@ -17,15 +16,24 @@ const sendSMS = require('../utils/sendSMS');
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate verification token
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const tokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24h
+
     const newUser = new User({
       name,
       role,
       phone,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      verifyToken,
+      verifyTokenExpires: tokenExpires,
     });
 
     await newUser.save();
+
+    // Send email
+    await sendVerificationEmail(email, verifyToken);
 
     const token = jwt.sign(
       { id: newUser._id, email: newUser.email },
@@ -83,6 +91,30 @@ const sendSMS = require('../utils/sendSMS');
     res.status(500).json({ message: "Server error" });
   }
   };
+
+  
+exports.verifyEmail = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const user = await User.findOne({
+      verifyToken: token,
+      verifyTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) return res.status(400).send("Invalid or expired token.");
+
+    user.isVerified = true;
+    user.verifyToken = undefined;
+    user.verifyTokenExpires = undefined;
+    await user.save();
+
+    res.send("Email verified successfully. You can now login.");
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).send("Server error");
+  }
+};
 
 // --------------------- FORGOT PASSWORD ---------------------
 // exports.forgotPassword = async (req, res) => {
