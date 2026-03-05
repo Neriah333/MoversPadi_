@@ -7,7 +7,7 @@ const sendSMS = require('../utils/sendSMS');
 // --------------------- SIGNUP --------------------
 
   exports.signup = async (req, res) => {
-    const { name, phone, email, password } = req.body;
+    const { name, role, phone, email, password } = req.body;
 
     try {
       let user = await User.findOne({ email });
@@ -15,7 +15,7 @@ const sendSMS = require('../utils/sendSMS');
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newUser = new User({ name, phone, email, password: hashedPassword });
+      const newUser = new User({ name, role, phone, email, password: hashedPassword });
 
       // const otp = generateOTP();
       // newUser.otp = {

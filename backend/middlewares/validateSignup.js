@@ -8,6 +8,17 @@ export const validateSignup = [
     .isEmail().withMessage("Invalid email address")
     .normalizeEmail(),
 
+  // phone number (any country)
+  body("phone")
+  .matches(/^\+[1-9]\d{1,14}$/)
+  .withMessage("Phone number must be in international format (e.g. +254712345678)"),
+
+  // role
+  body("role")
+    .trim()
+    .isIn(["user", "driver", "admin"])
+    .withMessage("Role must be user, driver, or admin"),
+
   // password
   body("password")
     .isLength({ min: 8 }).withMessage("Password must be at least 8 characters")
