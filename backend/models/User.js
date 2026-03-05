@@ -1,18 +1,16 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
-  // Unique identifier
   id: {
     type: mongoose.Schema.Types.ObjectId,
     auto: true
   },
 
-  // User details
   name: {
     type: String,
     required: true
   },
-  // User role: customer, mover, company
+
   role: {
     type: String,
     enum: ['customer', 'mover', 'admin'],
@@ -37,16 +35,17 @@ const UserSchema = new mongoose.Schema({
     required: true
   },
 
-  // User status (active, inactive, suspended, etc.)
   status: {
     type: String,
     enum: ['active', 'inactive', 'suspended'],
     default: 'active'
   },
 
-  // OTP for verification
-  verifyToken: String,
+  // OTP / verification
+  verifyToken: String,           // for link verification (optional)
   verifyTokenExpires: Date,
+  verifyCode: String,            // for numeric OTP verification
+  verifyCodeExpires: Date,
 
   isVerified: {
     type: Boolean,
