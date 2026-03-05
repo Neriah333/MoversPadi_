@@ -7,65 +7,50 @@ const sendSMS = require('../utils/sendSMS');
 // --------------------- SIGNUP --------------------
 
   exports.signup = async (req, res) => {
-    const { name, role, phone, email, password } = req.body;
+  const { name, role, phone, email, password } = req.body;
 
-    try {
-      let user = await User.findOne({ email });
-      if (user) return res.status(400).json({ message: "User already exists" });
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const newUser = new User({ name, role, phone, email, password: hashedPassword });
-
-      // const otp = generateOTP();
-      // newUser.otp = {
-      //   code: otp,
-      //   expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      // };
-
-      // await newUser.save();
-
-      // // Send OTP via SMS
-      // const phoneInternational = phone.startsWith('+') ? phone : `+254${phone.slice(-9)}`;
-      // await sendSMS(phoneInternational, `Your OTP code is: ${otp}`);
-
-      res.status(201).json({
-        message: "User created.",
-        userId: newUser._id,
-      });
-
-    } catch (error) {
-      console.error('Error during signup:', error);
-      res.status(500).json({ message: "Server error" });
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "User already exists" });
     }
-  };
-// --------------------- VERIFY OTP ---------------------
-  // exports.resendOtp = async (req, res) => {
-  //   const { email } = req.body;
 
-  //   try {
-  //     const user = await User.findOne({ email });
-  //     if (!user) return res.status(404).json({ message: "User not found" });
-  //     if (user.isVerified) return res.status(400).json({ message: "User already verified" });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  //     const otp = generateOTP();
-  //     user.otp = {
-  //       code: otp,
-  //       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-  //     };
+    const newUser = new User({
+      name,
+      role,
+      phone,
+      email,
+      password: hashedPassword
+    });
 
-  //     await user.save();
+    await newUser.save();
 
-  //     const phoneInternational = user.phone.startsWith('+') ? user.phone : `+254${user.phone.slice(-9)}`;
-  //     await sendSMS(phoneInternational, `Your new OTP code is: ${otp}`);
+    const token = jwt.sign(
+      { id: newUser._id, email: newUser.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-  //     res.json({ message: "OTP resent successfully" });
+    res.status(201).json({
+      message: "User created",
+      userId: newUser._id,
+      token
+    });
 
-  //   } catch (error) {
-  //     console.error('Error resending OTP:', error);
-  //     res.status(500).json({ message: "Server error" });
-  //   }
-  // };
+  } catch (error) {
+    console.error("Error during signup:", error);
+
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ errors });
+    }
+
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // --------------------- LOGIN ---------------------
   exports.login = async (req, res) => {
     const { email, password } = req.body;
@@ -88,9 +73,15 @@ const sendSMS = require('../utils/sendSMS');
       res.status(200).json({ message: "Login successful", token });
 
     } catch (error) {
-      console.error('Error during login:', error);
-      res.status(500).json({ message: "Server error" });
+    console.error("Error during signup:", error);
+
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ errors });
     }
+
+    res.status(500).json({ message: "Server error" });
+  }
   };
 
 // --------------------- FORGOT PASSWORD ---------------------
@@ -224,7 +215,7 @@ exports.logout = async (req, res) => {
     // For JWT, you usually just tell the client to remove the token
     // Optionally, you could implement token blacklisting here if needed
 
-    res.json({ message: "Logout successful. Please remove the token on client." });
+    res.json({ message: "Logout successful." });
 
   } catch (error) {
     console.error('Error during logout:', error);
