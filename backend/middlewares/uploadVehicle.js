@@ -1,13 +1,27 @@
 const multer = require("multer");
 const path = require("path");
 
-// storage configuration
+// Storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    if (file.fieldname === "vehicle_image") {
-      cb(null, "uploads/vehicles");
-    } else if (file.fieldname === "drivers_license_image") {
-      cb(null, "uploads/licenses");
+
+    if (file.fieldname === "id_document") {
+      cb(null, "uploads/ids");
+    } 
+    else if (file.fieldname === "vehicle_registration_doc") {
+      cb(null, "uploads/vehicleDocs");
+    } 
+    else if (file.fieldname === "road_worthiness_certificate") {
+      cb(null, "uploads/roadWorthiness");
+    } 
+    else if (file.fieldname === "insurance_policy" || file.fieldname === "insurance_coverage") {
+      cb(null, "uploads/insurance");
+    } 
+    else if (file.fieldname === "passport_photo") {
+      cb(null, "uploads/passports");
+    } 
+    else if (file.fieldname === "cac_certificate") {
+      cb(null, "uploads/cac");
     }
   },
 
@@ -17,16 +31,17 @@ const storage = multer.diskStorage({
   }
 });
 
+// File filter (only allow images and PDFs)
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpg|jpeg|png/;
+  const allowedTypes = /jpg|jpeg|png|pdf/;
   const ext = allowedTypes.test(
     path.extname(file.originalname).toLowerCase()
   );
 
   if (ext) {
-    return cb(null, true);
+    cb(null, true);
   } else {
-    cb("Only images are allowed");
+    cb(new Error("Only images and PDFs are allowed"));
   }
 };
 
