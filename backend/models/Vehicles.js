@@ -1,50 +1,56 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const VehicleSchema = new mongoose.Schema({
-  // Unique identifier
-  id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true
-  },
-
-  // Reference to user (owner of vehicle)
+const vehicleSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true
   },
 
-  // Service type: dispatch, haulage, tow
   service_type: {
     type: String,
-    enum: ['dispatch', 'haulage', 'tow'],
+    enum: ["dispatch", "haulage", "tow"],
     required: true
   },
 
-  // Vehicle details
   plate_number: {
     type: String,
     required: true,
     unique: true
   },
 
-  verified: {
-    type: Boolean,
-    default: false
+  vehicle_image: {
+    type: String, // stores image URL or file path
+    required: true
+  },
+
+  drivers_license_image: {
+    type: String, // license photo for verification
+    required: true
   },
 
   means_of_identification: {
     type: String,
+    enum: ["National ID", "Passport", "Driver License"],
     required: true
   },
 
   home_address: {
     type: String,
     required: true
+  },
+
+  verification_status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending"
+  },
+
+  verified: {
+    type: Boolean,
+    default: false
   }
 
-}, {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
-});
+}, { timestamps: true });
 
-module.exports = mongoose.model('Vehicle', VehicleSchema);
+module.exports = mongoose.model("Vehicle", vehicleSchema);
