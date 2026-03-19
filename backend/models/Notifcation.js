@@ -1,50 +1,47 @@
 const mongoose = require('mongoose');
 
-const BankAccountSchema = new mongoose.Schema(
+const NotificationSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: null
+      required: true
     },
 
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null
-    },
-
-    bank_name: {
+    title: {
       type: String,
       required: true,
       maxlength: 150,
       trim: true
     },
 
-    account_name: {
+    message: {
       type: String,
       required: true,
-      maxlength: 150,
       trim: true
     },
 
-    account_number: {
+    type: {
       type: String,
       required: true,
-      maxlength: 20,
+      maxlength: 50,
       trim: true
     },
 
-    bank_code: {
+    delivery_channel: {
       type: String,
-      default: null,
-      maxlength: 20,
-      trim: true
+      enum: ['push','sms','email','in_app'],
+      required: true
     },
 
-    is_primary: {
+    is_read: {
       type: Boolean,
       default: false
+    },
+
+    sent_at: {
+      type: Date,
+      default: null
     }
   },
   {
@@ -52,4 +49,4 @@ const BankAccountSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('BankAccount', BankAccountSchema);
+module.exports = mongoose.model('Notification', NotificationSchema);

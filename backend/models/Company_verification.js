@@ -1,46 +1,51 @@
 const mongoose = require('mongoose');
 
-const MoverVerificationSchema = new mongoose.Schema(
+const CompanyVerificationSchema = new mongoose.Schema(
   {
-    user_id: {
+    company_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Company",
       required: true,
-      unique: true // one verification record per user
+      unique: true // one verification per company
     },
 
-    driver_license_number: {
+    cac_certificate_path: {
       type: String,
-      maxlength: 100,
       default: null
     },
 
-    nin_number: {
+    company_picture_path: {
       type: String,
-      maxlength: 100,
       default: null
     },
 
-    passport_number: {
+    signature_path: {
       type: String,
-      maxlength: 100,
       default: null
     },
 
-    house_picture: {
+    representative_name: {
       type: String,
-      default: null // URL to uploaded image
+      maxlength: 150,
+      default: null
     },
 
-    years_of_experience: {
-      type: Number,
-      default: 0,
-      min: 0
+    representative_phone: {
+      type: String,
+      maxlength: 20,
+      default: null
     },
 
-    bank_verified: {
-      type: Boolean,
-      default: false
+    representative_id_type: {
+      type: String,
+      enum: ['nin', 'passport', 'drivers_license', 'voters_card', 'other'],
+      default: null
+    },
+
+    representative_id_number: {
+      type: String,
+      maxlength: 100,
+      default: null
     },
 
     verification_status: {
@@ -81,4 +86,4 @@ const MoverVerificationSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('MoverVerification', MoverVerificationSchema);
+module.exports = mongoose.model('CompanyVerification', CompanyVerificationSchema);

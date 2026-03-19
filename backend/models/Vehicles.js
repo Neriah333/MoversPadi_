@@ -1,56 +1,87 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const vehicleSchema = new mongoose.Schema({
-  user_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
+const VehicleSchema = new mongoose.Schema(
+  {
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+
+    company_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      default: null
+    },
+
+    service_type_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ServiceType",
+      required: true
+    },
+
+    vehicle_type: {
+      type: String,
+      enum: ['motorcycle','van','truck','tow_truck','private_car','bus'],
+      required: true
+    },
+
+    brand: {
+      type: String,
+      maxlength: 100,
+      default: null,
+      trim: true
+    },
+
+    model: {
+      type: String,
+      maxlength: 100,
+      default: null,
+      trim: true
+    },
+
+    color: {
+      type: String,
+      maxlength: 50,
+      default: null,
+      trim: true
+    },
+
+    plate_number: {
+      type: String,
+      maxlength: 50,
+      unique: true,
+      required: true,
+      trim: true
+    },
+
+    capacity: {
+      type: String,
+      maxlength: 100,
+      default: null
+    },
+
+    year_of_manufacture: {
+      type: Number,
+      min: 1900,
+      max: new Date().getFullYear(),
+      default: null
+    },
+
+    vehicle_photo: {
+      type: String,
+      default: null // URL to photo
+    },
+
+    status: {
+      type: String,
+      enum: ['pending','active','inactive','suspended'],
+      default: 'pending'
+    }
   },
-
-  service_type: {
-    type: String,
-    enum: ["dispatch", "haulage", "tow"],
-    required: true
-  },
-
-  plate_number: {
-    type: String,
-    required: true,
-    unique: true
-  },
-
-  vehicle_image: {
-    type: String, // stores image URL or file path
-    required: true
-  },
-
-  drivers_license_image: {
-    type: String, // license photo for verification
-    required: true
-  },
-
-  means_of_identification: {
-    type: String,
-    enum: ["National ID", "Passport", "Driver License"],
-    required: true
-  },
-
-  home_address: {
-    type: String,
-    required: true
-  },
-
-  verification_status: {
-    type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending"
-  },
-
-  verified: {
-    type: Boolean,
-    default: false
+  {
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
   }
+);
 
-}, { timestamps: true });
-
-module.exports = mongoose.model("Vehicle", vehicleSchema);
+module.exports = mongoose.model('Vehicle', VehicleSchema);

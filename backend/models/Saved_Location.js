@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const NextOfKinSchema = new mongoose.Schema(
+const SavedLocationSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -8,29 +8,31 @@ const NextOfKinSchema = new mongoose.Schema(
       required: true
     },
 
-    full_name: {
-      type: String,
-      required: true,
-      maxlength: 150,
-      trim: true
-    },
-
-    relationship: {
+    label: {
       type: String,
       required: true,
       maxlength: 100,
       trim: true
     },
 
-    phone: {
+    address: {
       type: String,
       required: true,
       trim: true
     },
 
-    address: {
-      type: String,
-      default: null
+    lat: {
+      type: Number,
+      default: null,
+      min: -90,
+      max: 90
+    },
+
+    lng: {
+      type: Number,
+      default: null,
+      min: -180,
+      max: 180
     }
   },
   {
@@ -38,4 +40,4 @@ const NextOfKinSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('NextOfKin', NextOfKinSchema);
+module.exports = mongoose.model('SavedLocation', SavedLocationSchema);
