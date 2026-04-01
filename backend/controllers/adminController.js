@@ -1,5 +1,5 @@
-const MoverVerification = require("../models/Movers_verification");
-const CompanyVerification = require("../models/Company_verification");
+const MoverVerification = require("../models/MoversVerification");
+const CompanyVerification = require("../models/CompanyVerification");
 
 exports.verifyEntity = async (req, res) => {
   try {

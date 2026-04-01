@@ -1,58 +1,65 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const moverSchema = new mongoose.Schema({
+const Mover = sequelize.define('Mover', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   user_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true, // One mover profile per user
+    references: {
+      model: 'users',
+      key: 'id'
+    },
+    onDelete: 'CASCADE'
   },
-
+  // Document Paths (URLs to S3/Cloudinary)
   id_document: {
-    type: String, // NIN or Driver's license image
-    required: true
+    type: DataTypes.STRING(500),
+    allowNull: false
   },
-
   vehicle_registration_doc: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(500),
+    allowNull: false
   },
-
   road_worthiness_certificate: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(500),
+    allowNull: false
   },
-
   insurance_policy: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(500),
+    allowNull: false
   },
-
   passport_photo: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(500),
+    allowNull: false
   },
-
+  // Bank Details
   bank_account_name: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(150),
+    allowNull: false
   },
-
   bank_account_number: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(20),
+    allowNull: false
   },
-
   bank_name: {
-    type: String,
-    required: true
+    type: DataTypes.STRING(150),
+    allowNull: false
   },
-
   verification_status: {
-    type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending"
+    type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+    defaultValue: 'pending'
   }
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'movers'
+});
 
-}, { timestamps: true });
-
-module.exports = mongoose.model("Mover", moverSchema)
+module.exports = Mover;

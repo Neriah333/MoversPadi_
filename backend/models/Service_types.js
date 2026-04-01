@@ -1,36 +1,40 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const ServiceTypeSchema = new mongoose.Schema(
-  {
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-      maxlength: 50,
-      trim: true
-    },
-
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-      maxlength: 100,
-      trim: true
-    },
-
-    description: {
-      type: String,
-      default: null
-    },
-
-    is_active: {
-      type: Boolean,
-      default: true
+const ServiceType = sequelize.define('ServiceType', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  slug: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: true,
+      isLowercase: true // Ensures URL consistency
     }
   },
-  {
-    timestamps: true // automatically adds createdAt and updatedAt
+  name: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    unique: true
+  },
+  description: {
+    type: DataTypes.TEXT, // Better for detailed service descriptions
+    allowNull: true,
+    defaultValue: null
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'service_types'
+});
 
-module.exports = mongoose.model('ServiceType', ServiceTypeSchema);
+module.exports = ServiceType;

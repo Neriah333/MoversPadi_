@@ -1,46 +1,57 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const WalletSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    },
-
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null
-    },
-
-    wallet_type: {
-      type: String,
-      enum: ['admin_commission','mover_earnings','company_earnings','customer_refund'],
-      required: true
-    },
-
-    balance: {
-      type: Number,
-      default: 0,
-      min: 0
-    },
-
-    currency: {
-      type: String,
-      default: 'NGN',
-      maxlength: 10
-    },
-
-    status: {
-      type: String,
-      enum: ['active','inactive','suspended'],
-      default: 'active'
+const Wallet = sequelize.define('Wallet', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'users',
+      key: 'id'
     }
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  company_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'companies',
+      key: 'id'
+    }
+  },
+  wallet_type: {
+    type: DataTypes.ENUM('admin_commission', 'mover_earnings', 'company_earnings', 'customer_refund'),
+    allowNull: false
+  },
+  balance: {
+    type: DataTypes.DECIMAL(15, 2), // Exact precision for financial tracking
+    defaultValue: 0.00,
+    validate: { min: 0 }
+  },
+  currency: {
+    type: DataTypes.STRING(10),
+    defaultValue: 'NGN'
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'inactive', 'suspended'),
+    defaultValue: 'active'
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'wallets',
+  indexes: [
+    { fields: ['user_id'] },
+    { fields: ['company_id'] },
+    { fields: ['wallet_type'] }
+  ]
+});
 
-module.exports = mongoose.model('Wallet', WalletSchema);
+module.exports = Wallet;

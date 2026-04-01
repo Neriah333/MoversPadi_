@@ -1,53 +1,66 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const SupportTicketSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
+const SupportTicket = sequelize.define('SupportTicket', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id'
     },
-
-    service_request_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ServiceRequest",
-      default: null
-    },
-
-    subject: {
-      type: String,
-      required: true,
-      maxlength: 150,
-      trim: true
-    },
-
-    message: {
-      type: String,
-      required: true,
-      trim: true
-    },
-
-    status: {
-      type: String,
-      enum: ['open','in_progress','resolved','closed'],
-      default: 'open'
-    },
-
-    priority: {
-      type: String,
-      enum: ['low','medium','high','urgent'],
-      default: 'medium'
-    },
-
-    assigned_admin_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
+    onDelete: 'CASCADE'
+  },
+  service_request_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'service_requests',
+      key: 'id'
     }
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  subject: {
+    type: DataTypes.STRING(150),
+    allowNull: false,
+    validate: { notEmpty: true }
+  },
+  message: {
+    type: DataTypes.TEXT, // Using TEXT for potentially long support queries
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM('open', 'in_progress', 'resolved', 'closed'),
+    defaultValue: 'open'
+  },
+  priority: {
+    type: DataTypes.ENUM('low', 'medium', 'high', 'urgent'),
+    defaultValue: 'medium'
+  },
+  assigned_admin_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'support_tickets',
+  indexes: [
+    { fields: ['status'] },
+    { fields: ['priority'] },
+    { fields: ['user_id'] }
+  ]
+});
 
-module.exports = mongoose.model('SupportTicket', SupportTicketSchema);
+module.exports = SupportTicket;

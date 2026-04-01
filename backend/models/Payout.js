@@ -1,65 +1,63 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const PayoutSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    },
-
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null
-    },
-
-    transaction_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Transaction",
-      required: true
-    },
-
-    payout_split_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "PayoutSplit",
-      required: true
-    },
-
-    amount: {
-      type: Number,
-      required: true,
-      min: 0
-    },
-
-    payout_reference: {
-      type: String,
-      default: null,
-      unique: true,
-      maxlength: 150,
-      sparse: true
-    },
-
-    payout_method: {
-      type: String,
-      enum: ['bank_transfer','wallet_balance','manual'],
-      default: 'wallet_balance'
-    },
-
-    payout_status: {
-      type: String,
-      enum: ['pending','processing','successful','failed'],
-      default: 'pending'
-    },
-
-    processed_at: {
-      type: Date,
-      default: null
-    }
+const Payout = sequelize.define('Payout', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: { model: 'users', key: 'id' }
+  },
+  company_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: { model: 'companies', key: 'id' }
+  },
+  transaction_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'transactions', key: 'id' }
+  },
+  payout_split_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'payout_splits', key: 'id' }
+  },
+  amount: {
+    type: DataTypes.DECIMAL(15, 2), // Standard for fintech amounts
+    allowNull: false,
+    validate: { min: 0 }
+  },
+  payout_reference: {
+    type: DataTypes.STRING(150),
+    unique: true,
+    allowNull: true,
+    defaultValue: null
+  },
+  payout_method: {
+    type: DataTypes.ENUM('bank_transfer', 'wallet_balance', 'manual'),
+    defaultValue: 'wallet_balance'
+  },
+  payout_status: {
+    type: DataTypes.ENUM('pending', 'processing', 'successful', 'failed'),
+    defaultValue: 'pending'
+  },
+  processed_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'payouts'
+});
 
-module.exports = mongoose.model('Payout', PayoutSchema);
+module.exports = Payout;

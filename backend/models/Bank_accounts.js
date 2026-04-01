@@ -1,55 +1,70 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const BankAccountSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    },
-
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null
-    },
-
-    bank_name: {
-      type: String,
-      required: true,
-      maxlength: 150,
-      trim: true
-    },
-
-    account_name: {
-      type: String,
-      required: true,
-      maxlength: 150,
-      trim: true
-    },
-
-    account_number: {
-      type: String,
-      required: true,
-      maxlength: 20,
-      trim: true
-    },
-
-    bank_code: {
-      type: String,
-      default: null,
-      maxlength: 20,
-      trim: true
-    },
-
-    is_primary: {
-      type: Boolean,
-      default: false
+const BankAccount = sequelize.define('BankAccount', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  // Link to User
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'Users',
+      key: 'id'
     }
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  // Link to Company
+  company_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'Companies',
+      key: 'id'
+    }
+  },
+  bank_name: {
+    type: DataTypes.STRING(150),
+    allowNull: false,
+    validate: { notEmpty: true }
+  },
+  account_name: {
+    type: DataTypes.STRING(150),
+    allowNull: false,
+    validate: { notEmpty: true }
+  },
+  // String is better than BigInt for account numbers to preserve leading zeros
+  account_number: {
+    type: DataTypes.STRING(20),
+    allowNull: false,
+    validate: { notEmpty: true }
+  },
+  bank_code: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    defaultValue: null
+  },
+  is_primary: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'bank_accounts',
+  // Optional: Ensure at least one owner exists at the DB level
+  validate: {
+    eitherUserOrCompany() {
+      if (!this.user_id && !this.company_id) {
+        throw new Error('Bank account must belong to either a User or a Company');
+      }
+    }
+  }
+});
 
-module.exports = mongoose.model('BankAccount', BankAccountSchema);
+module.exports = BankAccount;

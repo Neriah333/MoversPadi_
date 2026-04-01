@@ -1,47 +1,56 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const VehicleDocumentsSchema = new mongoose.Schema(
-  {
-    vehicle_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Vehicle",
-      required: true,
-      unique: true // one set of documents per vehicle
-    },
-
-    registration_document: {
-      type: String,
-      default: null // store cloud URL
-    },
-
-    road_worthiness_certificate: {
-      type: String,
-      default: null
-    },
-
-    insurance_document: {
-      type: String,
-      default: null
-    },
-
-    inspection_certificate: {
-      type: String,
-      default: null
-    },
-
-    proof_of_ownership: {
-      type: String,
-      default: null
-    },
-
-    uploaded_at: {
-      type: Date,
-      default: null
-    }
+const VehicleDocuments = sequelize.define('VehicleDocuments', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  vehicle_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true, // Enforces One-to-One
+    references: {
+      model: 'vehicles',
+      key: 'id'
+    },
+    onDelete: 'CASCADE'
+  },
+  registration_document: {
+    type: DataTypes.STRING(500), // Longer for Cloud URLs
+    allowNull: true,
+    defaultValue: null
+  },
+  road_worthiness_certificate: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    defaultValue: null
+  },
+  insurance_document: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    defaultValue: null
+  },
+  inspection_certificate: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    defaultValue: null
+  },
+  proof_of_ownership: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    defaultValue: null
+  },
+  uploaded_at: {
+    type: DataTypes.DATE,
+    defaultValue: null
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'vehicle_documents'
+});
 
-module.exports = mongoose.model('VehicleDocuments', VehicleDocumentsSchema);
+module.exports = VehicleDocuments;

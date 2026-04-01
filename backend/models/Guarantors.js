@@ -1,51 +1,54 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const GuarantorSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
-
-    full_name: {
-      type: String,
-      required: true,
-      maxlength: 150,
-      trim: true
-    },
-
-    phone: {
-      type: String,
-      required: true,
-      trim: true
-    },
-
-    address: {
-      type: String,
-      required: true
-    },
-
-    occupation: {
-      type: String,
-      maxlength: 150,
-      default: null
-    },
-
-    means_of_identification: {
-      type: String,
-      maxlength: 150,
-      default: null
-    },
-
-    id_document_path: {
-      type: String,
-      default: null
-    }
+const Guarantor = sequelize.define('Guarantor', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users', // Name of the target table
+      key: 'id'
+    },
+    onDelete: 'CASCADE' // If a user is deleted, their guarantor record is removed
+  },
+  full_name: {
+    type: DataTypes.STRING(150),
+    allowNull: false,
+    validate: { notEmpty: true }
+  },
+  phone: {
+    type: DataTypes.STRING(20),
+    allowNull: false
+  },
+  address: {
+    type: DataTypes.TEXT, // Use TEXT for flexible address lengths
+    allowNull: false
+  },
+  occupation: {
+    type: DataTypes.STRING(150),
+    allowNull: true,
+    defaultValue: null
+  },
+  means_of_identification: {
+    type: DataTypes.STRING(150),
+    allowNull: true,
+    defaultValue: null
+  },
+  id_document_path: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    defaultValue: null
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'guarantors'
+});
 
-module.exports = mongoose.model('Guarantor', GuarantorSchema);
+module.exports = Guarantor;

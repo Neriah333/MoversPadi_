@@ -1,86 +1,73 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const DocumentSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    },
-
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null
-    },
-
-    vehicle_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Vehicle",
-      default: null
-    },
-
-    document_type: {
-      type: String,
-      enum: [
-        'drivers_license',
-        'nin',
-        'passport',
-        'profile_photo',
-        'house_picture',
-        'vehicle_registration',
-        'road_worthiness',
-        'insurance',
-        'proof_of_ownership',
-        'cac_certificate',
-        'company_picture',
-        'company_signature',
-        'guarantor_id',
-        'other'
-      ],
-      required: true
-    },
-
-    file_path: {
-      type: String,
-      required: true // URL to file (Cloudinary/S3)
-    },
-
-    original_name: {
-      type: String,
-      default: null
-    },
-
-    mime_type: {
-      type: String,
-      default: null
-    },
-
-    file_size: {
-      type: Number,
-      default: null
-    },
-
-    file_status: {
-      type: String,
-      enum: ['pending', 'verified', 'rejected'],
-      default: 'pending'
-    },
-
-    verified_at: {
-      type: Date,
-      default: null
-    },
-
-    reviewed_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    }
+const Document = sequelize.define('Document', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  // Relationships
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'users', key: 'id' }
+  },
+  company_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'companies', key: 'id' }
+  },
+  vehicle_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'vehicles', key: 'id' }
+  },
+  // Document Metadata
+  document_type: {
+    type: DataTypes.ENUM(
+      'drivers_license', 'nin', 'passport', 'profile_photo',
+      'house_picture', 'vehicle_registration', 'road_worthiness',
+      'insurance', 'proof_of_ownership', 'cac_certificate',
+      'company_picture', 'company_signature', 'guarantor_id', 'other'
+    ),
+    allowNull: false
+  },
+  file_path: {
+    type: DataTypes.STRING(500), // Longer length for S3/Cloudinary URLs
+    allowNull: false
+  },
+  original_name: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  mime_type: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  file_size: {
+    type: DataTypes.BIGINT, // Good practice for file sizes in bytes
+    allowNull: true
+  },
+  // Verification logic
+  file_status: {
+    type: DataTypes.ENUM('pending', 'verified', 'rejected'),
+    defaultValue: 'pending'
+  },
+  verified_at: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  reviewed_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'users', key: 'id' }
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'documents'
+});
 
-module.exports = mongoose.model('Document', DocumentSchema);
+module.exports = Document;

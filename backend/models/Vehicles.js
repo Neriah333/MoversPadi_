@@ -1,87 +1,88 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const VehicleSchema = new mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null
-    },
-
-    company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null
-    },
-
-    service_type_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ServiceType",
-      required: true
-    },
-
-    vehicle_type: {
-      type: String,
-      enum: ['motorcycle','van','truck','tow_truck','private_car','bus'],
-      required: true
-    },
-
-    brand: {
-      type: String,
-      maxlength: 100,
-      default: null,
-      trim: true
-    },
-
-    model: {
-      type: String,
-      maxlength: 100,
-      default: null,
-      trim: true
-    },
-
-    color: {
-      type: String,
-      maxlength: 50,
-      default: null,
-      trim: true
-    },
-
-    plate_number: {
-      type: String,
-      maxlength: 50,
-      unique: true,
-      required: true,
-      trim: true
-    },
-
-    capacity: {
-      type: String,
-      maxlength: 100,
-      default: null
-    },
-
-    year_of_manufacture: {
-      type: Number,
-      min: 1900,
-      max: new Date().getFullYear(),
-      default: null
-    },
-
-    vehicle_photo: {
-      type: String,
-      default: null // URL to photo
-    },
-
-    status: {
-      type: String,
-      enum: ['pending','active','inactive','suspended'],
-      default: 'pending'
+const Vehicle = sequelize.define('Vehicle', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'users',
+      key: 'id'
     }
   },
-  {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  company_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+    references: {
+      model: 'companies',
+      key: 'id'
+    }
+  },
+  service_type_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'service_types',
+      key: 'id'
+    }
+  },
+  vehicle_type: {
+    type: DataTypes.ENUM('motorcycle', 'van', 'truck', 'tow_truck', 'private_car', 'bus'),
+    allowNull: false
+  },
+  brand: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    defaultValue: null
+  },
+  model: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    defaultValue: null
+  },
+  color: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    defaultValue: null
+  },
+  plate_number: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+    unique: true
+  },
+  capacity: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    defaultValue: null
+  },
+  year_of_manufacture: {
+    type: DataTypes.INTEGER,
+    validate: {
+      min: 1900,
+      max: new Date().getFullYear()
+    }
+  },
+  vehicle_photo: {
+    type: DataTypes.STRING(500), // Length for Cloudinary/S3 URLs
+    allowNull: true,
+    defaultValue: null
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'active', 'inactive', 'suspended'),
+    defaultValue: 'pending'
   }
-);
+}, {
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  tableName: 'vehicles'
+});
 
-module.exports = mongoose.model('Vehicle', VehicleSchema);
+module.exports = Vehicle;
