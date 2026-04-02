@@ -1,48 +1,48 @@
 const User = require('../models/User');
 const Role = require('../models/Role');
-const OtpVerification = require('../models/OtpVerification');
+const OtpVerification = require('../models/Otp_verification');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendVerificationCode, sendResetPasswordLink } = require('../utils/emails');
 const crypto = require('crypto');
 const { Op } = require('sequelize'); // Import Sequelize operators
 
-// --------------------- SIGNUP ---------------------
 exports.signup = async (req, res) => {
   const { name, role, phone, email, password } = req.body;
 
   try {
-    // 1. Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    // 2. LOOKUP THE ROLE ID (Fixes the 'admin' is not an integer error)
-    // This finds the record in 'roles' where name = 'admin' (or 'mover', etc)
     const roleData = await Role.findOne({ where: { name: role } });
-    
-    if (!roleData) {
-      return res.status(400).json({ message: `Role '${role}' does not exist in the database.` });
-    }
+    if (!roleData) return res.status(400).json({ message: "Role not found" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // 1. Generate the code
     const otp = await sendVerificationCode(email);
 
-    // 3. Create the User using the roleData.id
+    // 2. Create the User (notice we removed otp fields here)
     const newUser = await User.create({
-      full_name: name,   
-      role_id: roleData.id, 
+      full_name: name,
+      role_id: roleData.id,
       phone,
       email,
       password: hashedPassword,
-      verifyCode: otp,
-      verifyCodeExpires: new Date(Date.now() + 10 * 60 * 1000), 
       isVerified: false
     });
 
-    res.status(201).json({
-      message: "User created, OTP sent to email",
-      userId: newUser.id,
+    // 3. Save to your new OtpVerification table
+    await OtpVerification.create({
+      user_id: newUser.id,
+      phone_or_email: email,
+      otp_code: otp,
+      channel: 'email',
+      expires_at: new Date(Date.now() + 10 * 60 * 1000), // 10 mins from now
+      status: 'pending'
     });
+
+    res.status(201).json({ message: "User created, OTP sent", userId: newUser.id });
 
   } catch (error) {
     console.error("Signup error:", error);
@@ -55,17 +55,31 @@ exports.verifyOtp = async (req, res) => {
   const { email, code } = req.body;
 
   try {
-    const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    // 1. Find the latest pending OTP for this email
+    const otpRecord = await OtpVerification.findOne({
+      where: {
+        phone_or_email: email,
+        otp_code: code,
+        status: 'pending',
+        expires_at: { [Op.gt]: new Date() } // Must be greater than "now"
+      },
+      order: [['created_at', 'DESC']] // Get the most recent one
+    });
 
-    if (!user.verifyCode || user.verifyCode !== code || user.verifyCodeExpires < new Date()) {
+    if (!otpRecord) {
       return res.status(400).json({ message: "Invalid or expired code" });
     }
 
-    user.isVerified = true;
-    user.verifyCode = null; // Use null for SQL
-    user.verifyCodeExpires = null;
-    await user.save();
+    // 2. Mark OTP as verified
+    otpRecord.status = 'verified';
+    otpRecord.verified_at = new Date();
+    await otpRecord.save();
+
+    // 3. Mark User as verified
+    await User.update(
+      { isVerified: true },
+      { where: { email } }
+    );
 
     res.json({ message: "Email verified successfully" });
   } catch (error) {
