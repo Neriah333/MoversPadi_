@@ -12,8 +12,8 @@ const {
 
 router.post('/signup', signup);
 router.post('/verify-otp', verifyOtp);
-router.post('/login', login); // sends login OTP
-router.post('/verify-login-otp', verifyLoginOtp); // user submits login OTP
+router.post('/login', login); 
+router.post('/verify-login-otp', verifyLoginOtp); 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 router.post('/logout', logout);
