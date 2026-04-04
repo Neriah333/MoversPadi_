@@ -2,25 +2,21 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { connectDB, sequelize } = require('./config/db'); // 1. Import sequelize here
+const { connectDB } = require('./config/db'); 
 const Role = require('./models/Role');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 
-// Health Check
 app.get('/', (req, res) => {
   res.send('MoversPadi API is running...');
 });
 
-// 2. Seeding Logic
 const seedRoles = async () => {
   try {
     const count = await Role.count();
@@ -37,23 +33,20 @@ const seedRoles = async () => {
   }
 };
 
-// 3. Start the sequence
-const startServer = async () => {
+async function startServer() {
   try {
-    // This handles the MySQL connection and syncing
     await connectDB(); 
-    
-    // 4. Seed roles AFTER the DB is connected and synced
     await seedRoles();
 
-    const port = process.env.PORT || 5000;
-    app.listen(port, () => {
-      console.log(` Server is running on http://localhost:${port}`);
+    const PORT = process.env.PORT || 5000;
+    const server = app.listen(PORT, () => {
+      console.log(` Server is running on port ${PORT}`);
     });
+
   } catch (error) {
-    console.error(" Failed to start server:", error);
-    process.exit(1); 
+    console.error(" Fatal Error during startup:", error);
+    process.exit(1);
   }
-};
+}
 
 startServer();

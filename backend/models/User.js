@@ -90,7 +90,6 @@ const User = sequelize.define('User', {
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   tableName: 'users',
-  // Sequelize has built-in support for soft deletes via 'paranoid'
   paranoid: true, 
   deletedAt: 'deleted_at'
 });
