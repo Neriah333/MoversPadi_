@@ -29,7 +29,10 @@ const User = sequelize.define('User', {
   phone: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true
+    unique: true,
+    validate: {
+    is: /^\+?[0-9]{10,15}$/ // basic phone validation
+  }
   },
   password: {
     type: DataTypes.STRING(255),

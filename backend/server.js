@@ -5,9 +5,15 @@ const path = require('path');
 const { connectDB } = require('./config/db'); 
 const Role = require('./models/Role');
 
+require("./cronJobs");
+
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://moverspadi.vercel.app', 'http://localhost:8080'], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

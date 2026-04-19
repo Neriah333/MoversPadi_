@@ -11,7 +11,8 @@ exports.signup = async (req, res) => {
   const { name, role, phone, email, password } = req.body;
 
   try {
-    const existingUser = await User.findOne({ where: { email } });
+    const emailNormalized = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ where: { email: emailNormalized } });
     if (existingUser) return res.status(400).json({ message: "User already exists" });
 
     const roleData = await Role.findOne({ where: { name: role } });
@@ -27,7 +28,7 @@ exports.signup = async (req, res) => {
       full_name: name,
       role_id: roleData.id,
       phone,
-      email,
+      email: emailNormalized,
       password: hashedPassword,
       isVerified: false
     });
@@ -35,7 +36,7 @@ exports.signup = async (req, res) => {
     // 3. Save to your new OtpVerification table
     await OtpVerification.create({
       user_id: newUser.id,
-      phone_or_email: email,
+      phone_or_email: emailNormalized,
       otp_code: otp,
       channel: 'email',
       expires_at: new Date(Date.now() + 10 * 60 * 1000), // 10 mins from now
@@ -78,7 +79,7 @@ exports.verifyOtp = async (req, res) => {
     // 3. Mark User as verified
     await User.update(
       { isVerified: true },
-      { where: { email } }
+      { where: { email: emailNormalized } }
     );
 
     res.json({ message: "Email verified successfully" });
@@ -93,7 +94,8 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ where: { email } });
+    const emailNormalized = email.trim().toLowerCase();
+    const user = await User.findOne({ where: { email: emailNormalized } });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
