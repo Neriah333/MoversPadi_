@@ -56,15 +56,18 @@ exports.verifyOtp = async (req, res) => {
   const { email, code } = req.body;
 
   try {
-    // 1. Find the latest pending OTP for this email
+    // Normalize email FIRST
+    const emailNormalized = email.trim().toLowerCase();
+
+    // 1. Find the latest valid OTP
     const otpRecord = await OtpVerification.findOne({
       where: {
-        phone_or_email: email,
+        phone_or_email: emailNormalized,
         otp_code: code,
         status: 'pending',
-        expires_at: { [Op.gt]: new Date() } // Must be greater than "now"
+        expires_at: { [Op.gt]: new Date() }
       },
-      order: [['created_at', 'DESC']] // Get the most recent one
+      order: [['created_at', 'DESC']]
     });
 
     if (!otpRecord) {
@@ -76,13 +79,14 @@ exports.verifyOtp = async (req, res) => {
     otpRecord.verified_at = new Date();
     await otpRecord.save();
 
-    // 3. Mark User as verified
+    // 3. Mark user as verified
     await User.update(
       { isVerified: true },
       { where: { email: emailNormalized } }
     );
 
     res.json({ message: "Email verified successfully" });
+
   } catch (error) {
     console.error("Verify OTP error:", error);
     res.status(500).json({ message: "Server error" });
