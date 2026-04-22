@@ -25,15 +25,21 @@ app.get('/', (req, res) => {
 
 const seedRoles = async () => {
   try {
-    const count = await Role.count();
-    if (count === 0) {
-      await Role.bulkCreate([
-        { id: 1, name: 'admin', description: 'System Administrator' },
-        { id: 2, name: 'mover', description: 'Service Provider' },
-        { id: 3, name: 'customer', description: 'Standard User' }
-      ]);
-      console.log(' Default roles seeded successfully!');
+    const roles = [
+      { name: 'admin', description: 'System Administrator' },
+      { name: 'mover', description: 'Service Provider' },
+      { name: 'customer', description: 'Standard User' },
+      { name: 'company', description: 'Service Company' }
+    ];
+
+    for (const role of roles) {
+      await Role.findOrCreate({
+        where: { name: role.name },
+        defaults: role
+      });
     }
+
+    console.log(' Roles seeded/checked successfully!');
   } catch (error) {
     console.error(" Error seeding roles:", error);
   }

@@ -99,51 +99,36 @@ exports.login = async (req, res) => {
 
   try {
     const emailNormalized = email.trim().toLowerCase();
+
     const user = await User.findOne({ where: { email: emailNormalized } });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    if (!user.isVerified) return res.status(403).json({ message: "Please verify your account first" });
+    if (!user.isVerified)
+      return res.status(403).json({ message: "Please verify your account first" });
 
-    const otp = await sendVerificationCode(email);
-    user.verifyCode = otp;
-    user.verifyCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
-    await user.save();
-
-    res.json({ message: "OTP sent to email for login" });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// --------------------- VERIFY LOGIN OTP ---------------------
-exports.verifyLoginOtp = async (req, res) => {
-  const { email, code } = req.body;
-
-  try {
-    const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (!user.verifyCode || user.verifyCode !== code || user.verifyCodeExpires < new Date()) {
-      return res.status(400).json({ message: "Invalid or expired code" });
-    }
-
-    user.verifyCode = null;
-    user.verifyCodeExpires = null;
-    await user.save();
+    const role = await Role.findByPk(user.role_id);
 
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      {
+        id: user.id,
+        email: user.email,
+        role: role.name
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login successful", token });
+    res.json({
+      message: "Login successful",
+      token,
+      role: role.name
+    });
+
   } catch (error) {
-    console.error("Verify login OTP error:", error);
+    console.error("Login error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -153,7 +138,9 @@ exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ where: { email } });
+    const emailNormalized = email.trim().toLowerCase();
+
+    const user = await User.findOne({ where: { email: emailNormalized } });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = crypto.randomBytes(32).toString('hex');

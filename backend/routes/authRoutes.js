@@ -4,7 +4,6 @@ const {
   signup,
   verifyOtp,
   login,
-  verifyLoginOtp,
   forgotPassword,
   resetPassword,
   logout
@@ -12,8 +11,7 @@ const {
 
 router.post('/signup', signup);
 router.post('/verify-otp', verifyOtp);
-router.post('/login', login); 
-router.post('/verify-login-otp', verifyLoginOtp); 
+router.post('/login', login);  
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 router.post('/logout', logout);
